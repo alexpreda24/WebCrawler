@@ -37,14 +37,9 @@ public class SpiderLeg
             Document htmlDocument = connection.get();
             this.htmlDocument = htmlDocument;
 
-            if(connection.response().statusCode() == 200) // 200 is the HTTP OK status code
-            // indicating that everything is great.
-            {
-//                System.out.println("\n**Visiting** Received web page at " + url);
-            }
             if(!connection.response().contentType().contains("text/html"))
             {
-//                System.out.println("**Failure** Retrieved something other than HTML");
+                System.out.println("**Failure** Retrieved something other than HTML");
                 return false;
             }
             Elements linksOnPage = htmlDocument.select("a[href]");
