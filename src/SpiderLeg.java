@@ -1,5 +1,8 @@
 import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLDecoder;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -36,18 +39,10 @@ public class SpiderLeg
             Connection connection = Jsoup.connect(url).userAgent(USER_AGENT);
             Document htmlDocument = connection.get();
             this.htmlDocument = htmlDocument;
+            Element elements = htmlDocument.getElementById("[id*=contact]");
+//            Element linksOnPage = htmlDocument.("contact");
+//            if(linksOnPage == null) linksOnPage = htmlDocument.getElementById("contact-us");
 
-            if(!connection.response().contentType().contains("text/html"))
-            {
-                System.out.println("**Failure** Retrieved something other than HTML");
-                return false;
-            }
-            Elements linksOnPage = htmlDocument.select("a[href]");
-            //System.out.println("Found (" + linksOnPage.size() + ") links");
-            for(Element link : linksOnPage)
-            {
-                this.links.add(link.absUrl("href"));
-            }
             return true;
         }
         catch(IOException ioe)
@@ -66,10 +61,8 @@ public class SpiderLeg
      */
     public void searchForWord(String searchWord, Set<String> emails,Set<String> phone)
     {
-
-
-
         try{
+            URL url = new URL(searchWord);
             if(!crawl(searchWord))
                 throw new MalformedURLException("ERROR! Call crawl() before performing analysis on the document");
             if(this.htmlDocument == null)
@@ -77,18 +70,30 @@ public class SpiderLeg
                 throw new MalformedURLException("ERROR! Call crawl() before performing analysis on the document");
             }
             String input = this.htmlDocument.toString();
+            try {
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+            connection.connect();
 
+
+//                String pageSource = IOUtils.toString(connection.getInputStream(), "UTF-8");
+            }catch (IOException e){
+                e.printStackTrace();
+            }
+            Elements emailLinks = htmlDocument.select("a[href^=mailto:]");
+
+            for (Element emailLink : emailLinks) {
+                String sourceemail = emailLink.attr("href").substring(7);  // remove the "mailto:" part
+                String email = sourceemail.split("\\?")[0]; // remove the subject part
+                emails.add(email);
+            }
             Pattern pattern =
                     Pattern.compile("[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}", Pattern.CASE_INSENSITIVE);
-
             Matcher matchs = pattern.matcher(input);
-
             Pattern pattern1 = Pattern.compile("(\\+\\d{1,2}\\s)?\\(?\\d{3}\\)?[\\s.-]\\d{3}[\\s.-]\\d{4}", Pattern.CASE_INSENSITIVE);
-
             Matcher matchs1 = pattern1.matcher(input);
-
             while (matchs.find()) {
-                emails.add(matchs.group());
+                    emails.add(matchs.group());
             }
             while (matchs1.find()) {
                 phone.add(matchs1.group());
@@ -98,8 +103,6 @@ public class SpiderLeg
             e.printStackTrace();
         }
     }
-
-
     public List<String> getLinks()
     {
         return this.links;
