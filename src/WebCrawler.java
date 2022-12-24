@@ -18,14 +18,14 @@ public class WebCrawler {
     private static final int MAX_PAGES_TO_SEARCH = 10;
     private static final String USER_AGENT =
             "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/535.1 (KHTML, like Gecko) Chrome/13.0.782.112 Safari/535.1";
-     public static int countPagesVisited = 0;
+    public static int countPagesVisited = 0;
     private Set<String> pagesVisited = new HashSet<String>();
     private List<String> pagesToVisit = new LinkedList<String>();
     private Set<String> emails = new HashSet<>();
 
     private Set<String> phone = new HashSet<>();
-    public static boolean isValid(String url)
-    {
+
+    public static boolean isValid(String url) {
         /* Try creating a valid URL */
         try {
             new URL(url).toURI();
@@ -37,19 +37,19 @@ public class WebCrawler {
             return false;
         }
     }
-    private String nextUrl()
-    {
-            String nextUrl;
-            do
-            {
-                nextUrl = this.pagesToVisit.remove(0);
 
-            } while(this.pagesVisited.contains(nextUrl));
-            this.pagesVisited.add(nextUrl);
-            return nextUrl;
+    private String nextUrl() {
+        String nextUrl;
+        do {
+            nextUrl = this.pagesToVisit.remove(0);
+
+        } while (this.pagesVisited.contains(nextUrl));
+        this.pagesVisited.add(nextUrl);
+        return nextUrl;
 
     }
-    public int checkBusiness(String x,String st) throws IOException {
+
+    public int checkBusiness(String x, String st) throws IOException {
 
         // Connect to the website and parse the HTML
         // Parse the HTML of the website
@@ -74,43 +74,39 @@ public class WebCrawler {
             return 0;
         } catch (ConnectException e) {
             return 0;
-        } catch (HttpStatusException e){
+        } catch (HttpStatusException e) {
             return 0;
-        } catch (SocketTimeoutException e){
+        } catch (SocketTimeoutException e) {
             return 0;
         }
     }
-    public void search(String url, String searchWord)
-    {
-        while(this.pagesVisited.size() < MAX_PAGES_TO_SEARCH)
-        {
+
+    public void search(String url, String searchWord) {
+        while (this.pagesVisited.size() < MAX_PAGES_TO_SEARCH) {
             String currentUrl;
             SpiderLeg leg = new SpiderLeg();
-            if(this.pagesToVisit.isEmpty())
-            {
+            if (this.pagesToVisit.isEmpty()) {
                 currentUrl = url;
                 this.pagesVisited.add(url);
-            }
-            else
-            {
+            } else {
                 currentUrl = this.nextUrl();
             }
-            if(isValid(currentUrl) && leg.crawl(currentUrl)){
-                leg.searchForWord(currentUrl, emails,phone);
+            if (isValid(currentUrl) && leg.crawl(currentUrl)) {
+                leg.searchForWord(currentUrl, emails, phone);
             }
             // SpiderLeg
             int i = this.pagesToVisit.size();
             this.pagesToVisit.addAll(leg.getLinks());
             this.pagesToVisit.addAll(leg.getLinks());
             countPagesVisited++;
-            if(i == this.pagesToVisit.size()){
+            if (i == this.pagesToVisit.size()) {
                 break;
             }
         }
-           System.out.print("The emails from this website are: " + emails);
-           System.out.println();
-            System.out.println("The phone numbers from this website are: " + phone);
-            System.out.println(String.format("**Done** Visited %s web page(s)", this.pagesVisited.size()));
+        System.out.print("The emails from this website are: " + emails);
+        System.out.println();
+        System.out.println("The phone numbers from this website are: " + phone);
+        System.out.println(String.format("**Done** Visited %s web page(s)", this.pagesVisited.size()));
 
     }
 
@@ -121,15 +117,15 @@ public class WebCrawler {
         try {
             BufferedReader br = new BufferedReader(new java.io.FileReader(file));
             st = br.readLine();
-           int i = 0;
+            int i = 0;
             while ((st = br.readLine()) != null) {
                 WebCrawler crawler = new WebCrawler();
                 String x = "http://www." + st + "/";
                 String company = st.split("\\.")[0];
                 System.out.println("The company is: " + company);
                 i++;
-                System.out.println( i + " " + x);
-                if(crawler.checkBusiness(x,company) == 1)crawler.search(x, "computer");
+                System.out.println(i + " " + x);
+                if (crawler.checkBusiness(x, company) == 1) crawler.search(x, "computer");
                 try (FileWriter fw = new FileWriter("output.csv", true);
                      BufferedWriter bw = new BufferedWriter(fw);
                      PrintWriter out = new PrintWriter(bw)) {
@@ -141,12 +137,12 @@ public class WebCrawler {
                     //exception handling left as an exercise for the reader
                     e.printStackTrace();
                 }
-                if(countPagesVisited > 100) {
+                if (countPagesVisited > 100) {
                     System.out.println("The number of pages visited is: " + countPagesVisited);
                     break;
                 }
             }
-        }catch (IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
